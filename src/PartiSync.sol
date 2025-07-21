@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./Particle.sol";
 
 // This contract is used to payout the pulled funds from the users to the specified recipient.
@@ -123,6 +123,20 @@ contract PartiSync is Ownable, ReentrancyGuard {
             subscription.amount,
             block.timestamp
         );
+    }
+
+    function claimPayout(uint256 subscriptionId) external nonReentrant {
+        Subscription storage subscription = subscriptions[subscriptionId];
+        require(subscription.isActive, "Subscription is not active");
+        require(block.timestamp >= subscription.lastPayout + subscription.interval, "Too early for payout");
+        require(subscription.recipient == msg.sender, "Only recipient can claim payout");
+        // Transfer tokens from subscriber to recipient
+        require(
+            particleToken.transferFrom(subscription.subscriber, subscription.recipient, subscription.amount),
+            "Transfer failed"
+        );
+
+        emit PayoutExecuted(subscriptionId, subscription.subscriber, subscription.recipient, subscription.amount, block.timestamp);
     }
 
     /**

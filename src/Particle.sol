@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Particle is ERC20, Ownable {
+contract Particle is ERC20Upgradeable, Ownable {
 
     mapping(address => bool) private _blacklist;
     mapping(address => bool) private _whitelist;
@@ -12,13 +13,10 @@ contract Particle is ERC20, Ownable {
     event Blacklisted(address indexed account);
     event Whitelisted(address indexed account);
 
-    constructor(address initialOwner) ERC20("Particle", "PTCL") Ownable(initialOwner) {
+    constructor(address initialOwner) ERC20Upgradeable("Particle", "PTCL") Ownable(initialOwner) {
         _mint(msg.sender, 10000000 * 10 ** decimals());
     }
 
-    function decimals() public view virtual override returns (uint8) {
-        return 8;
-    }
 
     function mint(address to, uint256 amount) external onlyOwner {
         _mint(to, amount);
@@ -64,7 +62,7 @@ contract Particle is ERC20, Ownable {
         return _whitelist[account];
     }
 
-    function _transfer(address from, address to, uint256 amount) internal virtual override {
+    function _transfer(address from, address to, uint256 amount) internal virtual  override {
         require(!_blacklist[from], "Sender is blacklisted");
         require(!_blacklist[to], "Recipient is blacklisted");
         super._transfer(from, to, amount);
