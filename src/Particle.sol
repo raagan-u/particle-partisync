@@ -3,9 +3,9 @@ pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract Particle is ERC20Upgradeable, Ownable {
+contract Particle is ERC20Upgradeable, OwnableUpgradeable {
 
     mapping(address => bool) private _blacklist;
     mapping(address => bool) private _whitelist;
@@ -13,10 +13,11 @@ contract Particle is ERC20Upgradeable, Ownable {
     event Blacklisted(address indexed account);
     event Whitelisted(address indexed account);
 
-    constructor(address initialOwner) ERC20Upgradeable("Particle", "PTCL") Ownable(initialOwner) {
-        _mint(msg.sender, 10000000 * 10 ** decimals());
+    function initialize(address initialOwner) public initializer {
+        __ERC20_init("Particle", "PTCL");
+        __Ownable_init(initialOwner);
+        _mint(initialOwner, 10000000 * 10 ** decimals());
     }
-
 
     function mint(address to, uint256 amount) external onlyOwner {
         _mint(to, amount);
@@ -62,9 +63,9 @@ contract Particle is ERC20Upgradeable, Ownable {
         return _whitelist[account];
     }
 
-    function _transfer(address from, address to, uint256 amount) internal virtual  override {
-        require(!_blacklist[from], "Sender is blacklisted");
+    function transfer(address to, uint256 value) public virtual override returns (bool) {
+        require(!_blacklist[msg.sender], "Sender is blacklisted");
         require(!_blacklist[to], "Recipient is blacklisted");
-        super._transfer(from, to, amount);
+        return super.transfer(to, value);
     }
 }
